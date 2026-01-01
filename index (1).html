@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tabla Periódica 3D Interactiva</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  background:#020617;
+  font-family:Arial, sans-serif;
+  color:white;
+  text-align:center;
+}
+
+h1{ margin:15px 0; }
+
+button{
+  background:#2563eb;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  margin-bottom:10px;
+}
+
+.tabla{
+  display:grid;
+  grid-template-columns:repeat(18, minmax(45px, 60px));
+  gap:6px;
+  justify-content:center;
+  perspective:900px;
+}
+
+.elemento{
+  border-radius:8px;
+  padding:4px;
+  cursor:pointer;
+  transform-style:preserve-3d;
+  transition:.3s;
+}
+
+.elemento:hover{
+  transform:rotateX(15deg) rotateY(-15deg) scale(1.1);
+}
+
+.noMetal{background:#22c55e;}
+.gas{background:#38bdf8;}
+.alcalino{background:#f97316;}
+.alcalinoT{background:#facc15;}
+.metaloide{background:#a855f7;}
+.metal{background:#64748b;}
+
+.num{ font-size:10px; text-align:left; }
+.simbolo{ font-size:18px; font-weight:bold; }
+.nombre{ font-size:9px; }
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+}
+
+.modalContenido{
+  background:#020617;
+  width:95%;
+  max-width:380px;
+  margin:20px auto;
+  padding:20px;
+  border-radius:12px;
+  position:relative;
+}
+
+.cerrar{
+  position:absolute;
+  right:10px;
+  top:8px;
+  cursor:pointer;
+  color:red;
+}
+
+/* ATOMO 3D */
+.atomo{
+  position:relative;
+  width:260px;
+  height:260px;
+  margin:15px auto;
+  transform-style:preserve-3d;
+}
+
+.nucleo{
+  position:absolute;
+  width:22px;
+  height:22px;
+  background:red;
+  border-radius:50%;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 15px red;
+}
+
+.orbita{
+  position:absolute;
+  top:50%;
+  left:50%;
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:50%;
+  transform-style:preserve-3d;
+  animation:rotar linear infinite;
+}
+
+.electron{
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:7px;
+  height:7px;
+  background:#00eaff;
+  border-radius:50%;
+  box-shadow:0 0 10px cyan;
+}
+
+@keyframes rotar{
+  from{ transform:translate(-50%,-50%) rotateZ(0deg); }
+  to{ transform:translate(-50%,-50%) rotateZ(360deg); }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Tabla Periódica 3D Interactiva</h1>
+<button onclick="toggleElectrones()">Mostrar / Ocultar Electrones</button>
+<p>Haz clic en un elemento</p>
+
+<div class="tabla" id="tabla"></div>
+
+<div class="modal" id="modal">
+  <div class="modalContenido" id="modalContenido"></div>
+</div>
+
+<script>
+let mostrarE=true;
+
+function toggleElectrones(){
+  mostrarE=!mostrarE;
+  document.querySelectorAll('.electron').forEach(e=>{
+    e.style.display=mostrarE?'block':'none';
+  });
+}
+
+function capasBohr(Z){
+  const max=[2,8,18,32,32,18,8];
+  let capas=[],r=Z;
+  for(let i=0;i<max.length&&r>0;i++){
+    let e=Math.min(max[i],r);
+    capas.push(e); r-=e;
+  }
+  return capas;
+}
+
+const simbolos=["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"];
+const nombres=["Hidrógeno","Helio","Litio","Berilio","Boro","Carbono","Nitrógeno","Oxígeno","Flúor","Neón","Sodio","Magnesio","Aluminio","Silicio","Fósforo","Azufre","Cloro","Argón","Potasio","Calcio","Escandio","Titanio","Vanadio","Cromo","Manganeso","Hierro","Cobalto","Níquel","Cobre","Zinc","Galio","Germanio","Arsénico","Selenio","Bromo","Kriptón","Rubidio","Estroncio","Itrio","Circonio","Niobio","Molibdeno","Tecnecio","Rutenio","Rodio","Paladio","Plata","Cadmio","Indio","Estaño","Antimonio","Telurio","Yodo","Xenón","Cesio","Bario","Lantano","Cerio","Praseodimio","Neodimio","Prometio","Samario","Europio","Gadolinio","Terbio","Disprosio","Holmio","Erbio","Tulio","Iterbio","Lutecio","Hafnio","Tantalio","Wolframio","Renio","Osmio","Iridio","Platino","Oro","Mercurio","Talio","Plomo","Bismuto","Polonio","Astato","Radón","Francio","Radio","Actinio","Torio","Protactinio","Uranio","Neptunio","Plutonio","Americio","Curio","Berkelio","Californio","Einsteinio","Fermio","Mendelevio","Nobelio","Lawrencio","Rutherfordio","Dubnio","Seaborgio","Bohrio","Hassio","Meitnerio","Darmstadtio","Roentgenio","Copernicio","Nihonio","Flerovio","Moscovio","Livermorio","Tenesino","Oganesón"];
+
+const tabla=document.getElementById("tabla");
+for(let i=0;i<118;i++){
+  let d=document.createElement("div");
+  d.className="elemento metal";
+  d.innerHTML=`<div class='num'>${i+1}</div><div class='simbolo'>${simbolos[i]}</div><div class='nombre'>${nombres[i]}</div>`;
+  d.onclick=()=>mostrar(i+1,simbolos[i],nombres[i]);
+  tabla.appendChild(d);
+}
+
+function mostrar(Z,s,n){
+  let capas=capasBohr(Z);
+  let atom=`<div class='atomo' id='atomo'><div class='nucleo'></div>`;
+
+  capas.forEach((c,i)=>{
+    let r=60+i*30;
+    let inc=i*20;
+    atom+=`<div class='orbita' style='width:${r}px;height:${r}px;animation-duration:${4+i}s;transform:translate(-50%,-50%) rotateX(${inc}deg) rotateY(${inc}deg)'>`;
+    for(let e=0;e<c;e++){
+      atom+=`<div class='electron' style='transform:rotate(${360/c*e}deg) translate(${r/2}px,0)'></div>`;
+    }
+    atom+=`</div>`;
+  });
+
+  atom+=`</div>`;
+
+  modal.style.display='block';
+  modalContenido.innerHTML=`<span class='cerrar' onclick='cerrar()'>✖</span>
+  <h2>${n}</h2>
+  <p><b>Símbolo:</b> ${s} | <b>Z:</b> ${Z}</p>
+  ${atom}
+  <p style='font-size:12px'>Modelo atómico 3D interactivo</p>`;
+
+  let at=document.getElementById("atomo");
+  let rx=0,ry=0,isDown=false;
+  at.onmousedown=e=>{isDown=true};
+  at.onmouseup=e=>{isDown=false};
+  at.onmousemove=e=>{
+    if(isDown){ry+=e.movementX*0.5; rx-=e.movementY*0.5;
+      at.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg)`;}
+  }
+}
+
+function cerrar(){modal.style.display='none';}
+</script>
+
+</body>
+</html>
